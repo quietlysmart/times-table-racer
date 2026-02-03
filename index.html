@@ -907,6 +907,9 @@
 
     // ============ GAME LOGIC ============
     function startGame() {
+      // Initialize audio on first user interaction
+      initAudio();
+
       // Stop any existing opponent movement
       if (game.opponentInterval) {
         clearInterval(game.opponentInterval);
@@ -937,13 +940,16 @@
       showScreen('countdown-screen');
       let count = 3;
       document.getElementById('countdown-num').textContent = count;
+      playCountdownSound();
 
       const countInterval = setInterval(() => {
         count--;
         if (count > 0) {
           document.getElementById('countdown-num').textContent = count;
+          playCountdownSound();
         } else if (count === 0) {
           document.getElementById('countdown-num').textContent = 'GO!';
+          playGoSound();
         } else {
           clearInterval(countInterval);
           game.startTime = Date.now();
@@ -1016,6 +1022,7 @@
       if (selected === q.answer) {
         // Correct!
         btn.classList.add('correct');
+        playCorrectSound();
         game.score++;
         game.streak++;
         if (game.streak > game.bestStreak) game.bestStreak = game.streak;
@@ -1042,6 +1049,7 @@
       } else {
         // Wrong
         btn.classList.add('wrong');
+        playWrongSound();
         game.streak = 0;
 
         // Show correct answer
@@ -1089,6 +1097,11 @@
 
       const won = !settings.opponent || game.playerPos >= game.opponentPos;
 
+      // Play victory or consolation sound
+      if (won) {
+        playWinSound();
+      }
+
       document.getElementById('trophy').textContent = won ? '🏆' : '🎖️';
       document.getElementById('results-title').textContent = won ?
         (game.score >= game.questions.length * 0.8 ? 'Amazing!' : 'You Won!') : 'Good Try!';
@@ -1116,6 +1129,87 @@
         document.body.appendChild(div);
         setTimeout(() => div.remove(), 3000);
       }
+    }
+
+    // ============ SOUND SYSTEM ============
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      // Resume if suspended (required for mobile)
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playTone(frequency, duration, type = 'sine', volume = 0.3) {
+      if (!settings.sound || !audioCtx) return;
+
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+      // Envelope for pleasant sound
+      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(volume, audioCtx.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+      oscillator.start(audioCtx.currentTime);
+      oscillator.stop(audioCtx.currentTime + duration);
+    }
+
+    function playCorrectSound() {
+      if (!settings.sound) return;
+      initAudio();
+      // Happy ascending chime (C5 - E5 - G5)
+      playTone(523, 0.15, 'sine', 0.25);
+      setTimeout(() => playTone(659, 0.15, 'sine', 0.25), 80);
+      setTimeout(() => playTone(784, 0.25, 'sine', 0.3), 160);
+    }
+
+    function playWrongSound() {
+      if (!settings.sound) return;
+      initAudio();
+      // Gentle descending tone
+      playTone(330, 0.2, 'sine', 0.2);
+      setTimeout(() => playTone(262, 0.3, 'sine', 0.15), 150);
+    }
+
+    function playCountdownSound() {
+      if (!settings.sound) return;
+      initAudio();
+      playTone(440, 0.15, 'sine', 0.2);
+    }
+
+    function playGoSound() {
+      if (!settings.sound) return;
+      initAudio();
+      // Higher pitched "GO!"
+      playTone(587, 0.1, 'sine', 0.25);
+      setTimeout(() => playTone(784, 0.3, 'triangle', 0.3), 50);
+    }
+
+    function playWinSound() {
+      if (!settings.sound) return;
+      initAudio();
+      // Victory fanfare
+      const notes = [523, 659, 784, 1047];
+      notes.forEach((freq, i) => {
+        setTimeout(() => playTone(freq, 0.2, 'sine', 0.25), i * 100);
+      });
+    }
+
+    function playButtonSound() {
+      if (!settings.sound) return;
+      initAudio();
+      playTone(600, 0.05, 'sine', 0.1);
     }
   </script>
 </body>
