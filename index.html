@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Times Table Racer - A fun multiplication practice game for Primary 2 students">
+  <meta name="theme-color" content="#4CAF50">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Times Table Racer</title>
+  <link rel="icon" href="assets/images/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #4CAF50;
+      --primary-dark: #388E3C;
+      --secondary: #FF9800;
+      --correct: #4CAF50;
+      --wrong: #F44336;
+      --bg: #FFF8E1;
+      --surface: #FFFFFF;
+      --text: #212121;
+      --text-light: #FFFFFF;
+      --text-secondary: #757575;
+      --wood: #8D6E63;
+      --wood-dark: #6D4C41;
+      --track: #616161;
+      --track-line: #FFC107;
+      --radius: 16px;
+      --shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    body {
+      font-family: 'Fredoka', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, var(--bg) 0%, #FFFDE7 100%);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    #app {
+      width: 100%;
+      height: 100vh;
+      position: relative;
+    }
+
+    .screen {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .screen.active { display: flex; }
+
+    /* HOME SCREEN */
+    #home-screen {
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      background-image: linear-gradient(rgba(255,248,225,0.85), rgba(255,253,231,0.85)), url('assets/images/bg-home.png');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .game-title {
+      font-size: clamp(2rem, 8vw, 3.5rem);
+      font-weight: 700;
+      color: var(--primary-dark);
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .title-icon {
+      font-size: clamp(3rem, 10vw, 5rem);
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .character-section {
+      text-align: center;
+    }
+
+    .character-section p {
+      color: var(--text-secondary);
+      margin-bottom: 15px;
+      font-size: 1.1rem;
+    }
+
+    .characters {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .char-btn {
+      width: 70px;
+      height: 70px;
+      font-size: 2.5rem;
+      background: var(--surface);
+      border: 3px solid transparent;
+      border-radius: var(--radius);
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: all 0.2s;
+    }
+
+    .char-btn:hover { transform: scale(1.05); }
+    .char-btn.selected {
+      border-color: var(--primary);
+      background: #E8F5E9;
+    }
+
+    .start-btn {
+      padding: 18px 50px;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-light);
+      background: var(--primary);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      box-shadow: 0 4px 0 var(--primary-dark);
+      transition: all 0.15s;
+    }
+
+    .start-btn:hover { background: var(--primary-dark); }
+    .start-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 var(--primary-dark);
+    }
+
+    .corner-btn {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      background: var(--surface);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .corner-btn:hover { transform: scale(1.1); }
+
+    .settings-btn { top: 15px; right: 15px; }
+    .help-btn { top: 15px; left: 15px; }
+
+    /* SETTINGS PANEL */
+    .panel-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+
+    .panel-overlay.active { display: flex; }
+
+    .panel {
+      background: var(--surface);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 400px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .panel-header h2 { font-size: 1.3rem; }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      background: #f5f5f5;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    .panel-body { padding: 20px; }
+
+    .setting-group {
+      margin-bottom: 20px;
+    }
+
+    .setting-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .checkbox-row, .radio-row {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .checkbox-row label, .radio-row label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .checkbox-row input, .radio-row input {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .toggle-row {
+      display: flex;
+      gap: 5px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: #f5f5f5;
+      cursor: pointer;
+      font-weight: 500;
+      border-radius: 8px;
+    }
+
+    .toggle-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .switch-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .switch {
+      width: 50px;
+      height: 28px;
+      background: #ccc;
+      border-radius: 14px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .switch.on { background: var(--primary); }
+
+    .switch::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: left 0.2s;
+    }
+
+    .switch.on::after { left: 24px; }
+
+    .panel-footer {
+      padding: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: white;
+      background: var(--primary);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+
+    /* COUNTDOWN SCREEN */
+    #countdown-screen {
+      align-items: center;
+      justify-content: center;
+    }
+
+    .countdown-num {
+      font-size: clamp(6rem, 25vw, 12rem);
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .countdown-label {
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+    }
+
+    /* GAME SCREEN */
+    #game-screen {
+      gap: 10px;
+      background-image: linear-gradient(rgba(255,248,225,0.75), rgba(255,253,231,0.75)), url('assets/images/bg-game.png');
+      background-size: cover;
+      background-position: center;
+      justify-content: flex-start;
+      padding-bottom: 0;
+    }
+
+    .race-track-container {
+      margin-top: auto;
+      width: 100%;
+      padding: 15px 20px 25px;
+      background: linear-gradient(to top, rgba(76,175,80,0.3), transparent);
+    }
+
+    .race-track {
+      background: linear-gradient(180deg, #555 0%, var(--track) 20%, var(--track) 80%, #444 100%);
+      border-radius: var(--radius);
+      height: 130px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.1);
+      border: 3px solid #333;
+    }
+
+    .track-lane {
+      position: absolute;
+      left: 0; right: 0;
+      height: 50%;
+      border-bottom: 3px dashed rgba(255,255,255,0.3);
+    }
+    .track-lane:first-of-type { top: 0; }
+
+    .track-line {
+      position: absolute;
+      top: 50%;
+      left: 5%;
+      right: 5%;
+      height: 4px;
+      background: repeating-linear-gradient(90deg, var(--track-line) 0 20px, transparent 20px 40px);
+      transform: translateY(-50%);
+    }
+
+    .runner {
+      position: absolute;
+      font-size: 2.8rem;
+      transform: translateY(-50%);
+      transition: left 0.3s ease-out;
+      z-index: 2;
+      filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.3));
+    }
+
+    .runner.jump {
+      animation: jump 0.4s ease-out;
+    }
+
+    @keyframes jump {
+      0%, 100% { transform: translateY(-50%) scale(1); }
+      50% { transform: translateY(-80%) scale(1.2); }
+    }
+
+    .player-runner { left: 5%; top: 25%; }
+    .opponent-runner { left: 5%; top: 75%; transition: left 0.15s linear; }
+
+    .flag {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 2rem;
+      z-index: 1;
+    }
+    .flag-start { left: 10px; }
+    .flag-finish { right: 10px; }
+
+    .track-labels {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 15px;
+      font-size: 0.8rem;
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+      margin-top: 5px;
+    }
+
+    .question-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 12px;
+      padding-top: 10px;
+    }
+
+    .question-card {
+      background: linear-gradient(145deg, #A1887F 0%, var(--wood) 50%, var(--wood-dark) 100%);
+      padding: 15px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .question-inner {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 25px;
+      text-align: center;
+    }
+
+    .question-text {
+      font-size: clamp(2rem, 10vw, 4rem);
+      font-weight: 700;
+    }
+
+    .game-info {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 500px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .boost-bar {
+      width: 100px;
+      height: 10px;
+      background: #eee;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 2px solid var(--wood);
+    }
+
+    .boost-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--secondary), #FFD54F);
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .answers-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .answer-btn {
+      aspect-ratio: 1;
+      font-size: clamp(1.5rem, 6vw, 2.5rem);
+      font-weight: 700;
+      background: var(--surface);
+      border: 3px solid #eee;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.15s;
+      min-height: 70px;
+    }
+
+    .answer-btn:hover { border-color: var(--primary); transform: scale(1.03); }
+    .answer-btn:disabled { cursor: default; }
+    .answer-btn.correct {
+      background: #E8F5E9;
+      border-color: var(--correct);
+      color: var(--correct);
+      animation: pop 0.3s;
+    }
+    .answer-btn.wrong {
+      background: #FFEBEE;
+      border-color: var(--wrong);
+      color: var(--wrong);
+      animation: shake 0.3s;
+    }
+    .answer-btn.reveal {
+      background: #E8F5E9;
+      border-color: var(--correct);
+      color: var(--correct);
+    }
+
+    @keyframes pop {
+      50% { transform: scale(1.1); }
+    }
+
+    @keyframes shake {
+      20%, 60% { transform: translateX(-5px); }
+      40%, 80% { transform: translateX(5px); }
+    }
+
+    /* RESULTS SCREEN */
+    #results-screen {
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    .results-header {
+      text-align: center;
+    }
+
+    .trophy { font-size: 4rem; }
+    .results-title {
+      font-size: 2rem;
+      color: var(--primary-dark);
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      padding: 15px 25px;
+      border-radius: var(--radius);
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-icon { font-size: 1.5rem; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; display: block; }
+    .stat-label { font-size: 0.8rem; color: var(--text-secondary); }
+
+    .results-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .results-actions button {
+      padding: 15px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+
+    .play-again-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+    }
+
+    .settings-link-btn {
+      background: white;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    /* CONFETTI */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      top: -10px;
+      animation: fall 2s linear forwards;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* Responsive */
+    @media (max-height: 600px) {
+      .question-inner { padding: 15px; }
+      .question-text { font-size: clamp(1.5rem, 8vw, 2.5rem); }
+      .answer-btn { min-height: 50px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- HOME SCREEN -->
+    <div id="home-screen" class="screen active">
+      <button class="corner-btn settings-btn" onclick="openSettings()">⚙️</button>
+      <button class="corner-btn help-btn" onclick="openHelp()">❓</button>
+
+      <div>
+        <span class="title-icon">🏁</span>
+        <h1 class="game-title">Times Table<br>Racer</h1>
+      </div>
+
+      <div class="character-section">
+        <p>Choose your runner:</p>
+        <div class="characters">
+          <button class="char-btn selected" data-char="🐰" onclick="selectChar(this)">🐰</button>
+          <button class="char-btn" data-char="🐱" onclick="selectChar(this)">🐱</button>
+          <button class="char-btn" data-char="🐶" onclick="selectChar(this)">🐶</button>
+        </div>
+      </div>
+
+      <button class="start-btn" onclick="startGame()">Start Race 🏃</button>
+    </div>
+
+    <!-- SETTINGS PANEL -->
+    <div id="settings-overlay" class="panel-overlay">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Teacher Settings</h2>
+          <button class="close-btn" onclick="closeSettings()">✕</button>
+        </div>
+        <div class="panel-body">
+          <div class="setting-group">
+            <span class="setting-label">Times Tables:</span>
+            <div class="checkbox-row">
+              <label><input type="checkbox" id="chk-2" checked> 2×</label>
+              <label><input type="checkbox" id="chk-5" checked> 5×</label>
+              <label><input type="checkbox" id="chk-10" checked> 10×</label>
+            </div>
+          </div>
+          <div class="setting-group">
+            <span class="setting-label">Questions:</span>
+            <div class="radio-row">
+              <label><input type="radio" name="qcount" value="5"> 5</label>
+              <label><input type="radio" name="qcount" value="10" checked> 10</label>
+              <label><input type="radio" name="qcount" value="15"> 15</label>
+            </div>
+          </div>
+          <div class="setting-group">
+            <span class="setting-label">Difficulty:</span>
+            <div class="toggle-row">
+              <button class="toggle-btn" onclick="setDifficulty('easy', this)">Easy</button>
+              <button class="toggle-btn active" onclick="setDifficulty('standard', this)">Standard</button>
+            </div>
+          </div>
+          <div class="setting-group">
+            <span class="setting-label">Opponent:</span>
+            <div class="switch-row">
+              <div class="switch on" id="opponent-switch" onclick="toggleSwitch(this)"></div>
+              <span id="opponent-label">ON</span>
+            </div>
+          </div>
+          <div class="setting-group">
+            <span class="setting-label">Sound:</span>
+            <div class="switch-row">
+              <div class="switch on" id="sound-switch" onclick="toggleSwitch(this)"></div>
+              <span id="sound-label">ON</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel-footer">
+          <button class="save-btn" onclick="closeSettings()">Save Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HELP PANEL -->
+    <div id="help-overlay" class="panel-overlay">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>How to Play</h2>
+          <button class="close-btn" onclick="closeHelp()">✕</button>
+        </div>
+        <div class="panel-body" style="text-align: center;">
+          <div style="font-size: 4rem; margin-bottom: 15px;">🎯</div>
+          <h3 style="margin-bottom: 10px;">Answer Questions</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 20px;">Tap the correct answer to move forward!</p>
+          <div style="font-size: 4rem; margin-bottom: 15px;">🏃</div>
+          <h3 style="margin-bottom: 10px;">Win the Race!</h3>
+          <p style="color: var(--text-secondary);">Get 3 correct in a row for a speed boost!</p>
+        </div>
+        <div class="panel-footer">
+          <button class="save-btn" onclick="closeHelp()">Got it!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COUNTDOWN SCREEN -->
+    <div id="countdown-screen" class="screen">
+      <div class="countdown-num" id="countdown-num">3</div>
+      <div class="countdown-label">Get Ready!</div>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="game-screen" class="screen">
+      <div class="question-area">
+        <div class="game-info">
+          <span>Questions left: <strong id="q-left">10</strong></span>
+          <div>
+            <span>Boost</span>
+            <div class="boost-bar"><div class="boost-fill" id="boost-fill"></div></div>
+          </div>
+        </div>
+
+        <div class="question-card">
+          <div class="question-inner">
+            <span class="question-text" id="question-text">2 × 5 = ?</span>
+          </div>
+        </div>
+
+        <div class="answers-grid" id="answers-grid">
+          <button class="answer-btn" onclick="checkAnswer(this)">10</button>
+          <button class="answer-btn" onclick="checkAnswer(this)">8</button>
+          <button class="answer-btn" onclick="checkAnswer(this)">12</button>
+          <button class="answer-btn" onclick="checkAnswer(this)">15</button>
+        </div>
+      </div>
+
+      <div class="race-track-container">
+        <div class="race-track">
+          <div class="track-lane"></div>
+          <div class="track-line"></div>
+          <span class="flag flag-start">🚩</span>
+          <span class="flag flag-finish">🏁</span>
+          <div class="runner player-runner" id="player-runner">🐰</div>
+          <div class="runner opponent-runner" id="opponent-runner">🐢</div>
+        </div>
+        <div class="track-labels">
+          <span>START</span>
+          <span>FINISH</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="results-screen" class="screen">
+      <div class="results-header">
+        <div class="trophy" id="trophy">🏆</div>
+        <h2 class="results-title" id="results-title">Great Race!</h2>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="stat-icon">🎯</span>
+          <span class="stat-value" id="final-score">8/10</span>
+          <span class="stat-label">Score</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">🔥</span>
+          <span class="stat-value" id="final-streak">5</span>
+          <span class="stat-label">Best Streak</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">⏱️</span>
+          <span class="stat-value" id="final-time">1:23</span>
+          <span class="stat-label">Time</span>
+        </div>
+      </div>
+
+      <div class="results-actions">
+        <button class="play-again-btn" onclick="startGame()">Race Again</button>
+        <button class="settings-link-btn" onclick="goHomeWithSettings()">Change Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============ UNREGISTER OLD SERVICE WORKERS ============
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+          registration.unregister();
+          console.log('Service worker unregistered');
+        }
+      });
+    }
+
+    // ============ GAME STATE ============
+    let settings = {
+      tables: [2, 5, 10],
+      questionCount: 10,
+      difficulty: 'standard',
+      opponent: true,
+      sound: true,
+      character: '🐰'
+    };
+
+    let game = {
+      questions: [],
+      currentIndex: 0,
+      score: 0,
+      streak: 0,
+      bestStreak: 0,
+      boostCount: 0,
+      playerPos: 0,
+      opponentPos: 0,
+      startTime: null,
+      opponentInterval: null,
+      answering: false
+    };
+
+    // ============ SCREEN NAVIGATION ============
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    // ============ SETTINGS ============
+    function openSettings() {
+      document.getElementById('settings-overlay').classList.add('active');
+    }
+
+    function closeSettings() {
+      // Read settings from UI
+      settings.tables = [];
+      if (document.getElementById('chk-2').checked) settings.tables.push(2);
+      if (document.getElementById('chk-5').checked) settings.tables.push(5);
+      if (document.getElementById('chk-10').checked) settings.tables.push(10);
+      if (settings.tables.length === 0) settings.tables = [2];
+
+      const qRadio = document.querySelector('input[name="qcount"]:checked');
+      settings.questionCount = qRadio ? parseInt(qRadio.value) : 10;
+
+      settings.opponent = document.getElementById('opponent-switch').classList.contains('on');
+      settings.sound = document.getElementById('sound-switch').classList.contains('on');
+
+      document.getElementById('settings-overlay').classList.remove('active');
+    }
+
+    function openHelp() {
+      document.getElementById('help-overlay').classList.add('active');
+    }
+
+    function closeHelp() {
+      document.getElementById('help-overlay').classList.remove('active');
+    }
+
+    function selectChar(btn) {
+      document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      settings.character = btn.dataset.char;
+    }
+
+    function setDifficulty(diff, btn) {
+      settings.difficulty = diff;
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function toggleSwitch(el) {
+      el.classList.toggle('on');
+      const label = el.nextElementSibling;
+      label.textContent = el.classList.contains('on') ? 'ON' : 'OFF';
+    }
+
+    // ============ QUESTION GENERATION ============
+    function generateQuestions() {
+      const questions = [];
+      const maxMult = settings.difficulty === 'easy' ? 5 : 10;
+
+      for (let i = 0; i < settings.questionCount; i++) {
+        const base = settings.tables[Math.floor(Math.random() * settings.tables.length)];
+        const mult = Math.floor(Math.random() * maxMult) + 1;
+        const answer = base * mult;
+        const distractors = generateDistractors(base, mult, answer);
+        const options = shuffle([answer, ...distractors]);
+
+        questions.push({ base, mult, answer, options, text: `${base} × ${mult} = ?` });
+      }
+      return questions;
+    }
+
+    function generateDistractors(base, mult, answer) {
+      const set = new Set();
+      // Off by one multiple
+      if (answer - base > 0) set.add(answer - base);
+      set.add(answer + base);
+      // Adjacent multiples
+      if (base * (mult - 1) > 0) set.add(base * (mult - 1));
+      set.add(base * (mult + 1));
+      // Remove correct answer if somehow added
+      set.delete(answer);
+      // Return 3 distractors
+      return Array.from(set).slice(0, 3);
+    }
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // ============ GAME LOGIC ============
+    function startGame() {
+      // Stop any existing opponent movement
+      if (game.opponentInterval) {
+        clearInterval(game.opponentInterval);
+      }
+
+      // Reset game state
+      game = {
+        questions: generateQuestions(),
+        currentIndex: 0,
+        score: 0,
+        streak: 0,
+        bestStreak: 0,
+        boostCount: 0,
+        playerPos: 0,
+        opponentPos: 0,
+        startTime: null,
+        opponentInterval: null,
+        answering: false
+      };
+
+      // Update player character
+      document.getElementById('player-runner').textContent = settings.character;
+      document.getElementById('player-runner').style.left = '5%';
+      document.getElementById('opponent-runner').style.left = '5%';
+      document.getElementById('opponent-runner').style.display = settings.opponent ? 'block' : 'none';
+
+      // Start countdown
+      showScreen('countdown-screen');
+      let count = 3;
+      document.getElementById('countdown-num').textContent = count;
+
+      const countInterval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          document.getElementById('countdown-num').textContent = count;
+        } else if (count === 0) {
+          document.getElementById('countdown-num').textContent = 'GO!';
+        } else {
+          clearInterval(countInterval);
+          game.startTime = Date.now();
+          showScreen('game-screen');
+          showQuestion();
+        }
+      }, 800);
+    }
+
+    function showQuestion() {
+      const q = game.questions[game.currentIndex];
+      document.getElementById('question-text').textContent = q.text;
+      document.getElementById('q-left').textContent = game.questions.length - game.currentIndex;
+
+      const btns = document.querySelectorAll('.answer-btn');
+      btns.forEach((btn, i) => {
+        btn.textContent = q.options[i];
+        btn.className = 'answer-btn';
+        btn.disabled = false;
+      });
+
+      updateBoostBar();
+      game.answering = false;
+
+      // Start opponent moving continuously (creates urgency!)
+      startOpponentMovement();
+    }
+
+    function startOpponentMovement() {
+      if (!settings.opponent) return;
+
+      // Clear any existing interval
+      if (game.opponentInterval) clearInterval(game.opponentInterval);
+
+      // Opponent creeps forward every 150ms while waiting for answer
+      game.opponentInterval = setInterval(() => {
+        if (game.answering) return; // Don't move while processing answer
+
+        // Slow creep forward - about 0.5% per tick
+        const targetPos = (game.currentIndex + 1) / game.questions.length;
+        const creepSpeed = 0.005;
+
+        if (game.opponentPos < targetPos * 0.9) {
+          game.opponentPos = Math.min(game.opponentPos + creepSpeed, 1);
+          document.getElementById('opponent-runner').style.left = (5 + game.opponentPos * 80) + '%';
+        }
+      }, 150);
+    }
+
+    function stopOpponentMovement() {
+      if (game.opponentInterval) {
+        clearInterval(game.opponentInterval);
+        game.opponentInterval = null;
+      }
+    }
+
+    function checkAnswer(btn) {
+      const q = game.questions[game.currentIndex];
+      const selected = parseInt(btn.textContent);
+      const btns = document.querySelectorAll('.answer-btn');
+      const playerRunner = document.getElementById('player-runner');
+
+      // Mark as answering and stop opponent creep
+      game.answering = true;
+      stopOpponentMovement();
+
+      // Disable all buttons
+      btns.forEach(b => b.disabled = true);
+
+      if (selected === q.answer) {
+        // Correct!
+        btn.classList.add('correct');
+        game.score++;
+        game.streak++;
+        if (game.streak > game.bestStreak) game.bestStreak = game.streak;
+
+        // Check for boost
+        if (game.streak % 3 === 0) {
+          game.boostCount++;
+        }
+
+        // Player JUMPS forward!
+        playerRunner.classList.add('jump');
+        setTimeout(() => playerRunner.classList.remove('jump'), 400);
+
+        // Move player - bigger jump on correct
+        const baseProgress = (game.currentIndex + 1) / game.questions.length;
+        const boostBonus = game.boostCount > 0 ? 0.08 : 0;
+        game.playerPos = Math.min(1, baseProgress + boostBonus);
+        document.getElementById('player-runner').style.left = (5 + game.playerPos * 80) + '%';
+
+        // Confetti
+        createConfetti();
+
+        setTimeout(nextQuestion, 600);
+      } else {
+        // Wrong
+        btn.classList.add('wrong');
+        game.streak = 0;
+
+        // Show correct answer
+        btns.forEach(b => {
+          if (parseInt(b.textContent) === q.answer) {
+            b.classList.add('reveal');
+          }
+        });
+
+        // Opponent gets a SPEED BUMP on wrong answer!
+        if (settings.opponent) {
+          const speedBump = 0.12; // Big jump forward for opponent
+          game.opponentPos = Math.min(1, game.opponentPos + speedBump);
+          document.getElementById('opponent-runner').style.left = (5 + game.opponentPos * 80) + '%';
+        }
+
+        setTimeout(nextQuestion, 1200);
+      }
+
+      updateBoostBar();
+    }
+
+    function updateBoostBar() {
+      const progress = (game.streak % 3) / 3 * 100;
+      document.getElementById('boost-fill').style.width = progress + '%';
+    }
+
+    function nextQuestion() {
+      game.currentIndex++;
+      if (game.currentIndex >= game.questions.length) {
+        endGame();
+      } else {
+        showQuestion();
+      }
+    }
+
+    function endGame() {
+      // Stop opponent movement
+      stopOpponentMovement();
+
+      const elapsed = Date.now() - game.startTime;
+      const mins = Math.floor(elapsed / 60000);
+      const secs = Math.floor((elapsed % 60000) / 1000);
+      const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+      const won = !settings.opponent || game.playerPos >= game.opponentPos;
+
+      document.getElementById('trophy').textContent = won ? '🏆' : '🎖️';
+      document.getElementById('results-title').textContent = won ?
+        (game.score >= game.questions.length * 0.8 ? 'Amazing!' : 'You Won!') : 'Good Try!';
+      document.getElementById('final-score').textContent = `${game.score}/${game.questions.length}`;
+      document.getElementById('final-streak').textContent = game.bestStreak;
+      document.getElementById('final-time').textContent = timeStr;
+
+      showScreen('results-screen');
+    }
+
+    function goHomeWithSettings() {
+      showScreen('home-screen');
+      openSettings();
+    }
+
+    function createConfetti() {
+      const colors = ['#4CAF50', '#FF9800', '#2196F3', '#E91E63', '#9C27B0'];
+      for (let i = 0; i < 15; i++) {
+        const div = document.createElement('div');
+        div.className = 'confetti';
+        div.style.left = Math.random() * 100 + '%';
+        div.style.background = colors[Math.floor(Math.random() * colors.length)];
+        div.style.animationDuration = (1.5 + Math.random()) + 's';
+        div.style.animationDelay = (Math.random() * 0.3) + 's';
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 3000);
+      }
+    }
+  </script>
+</body>
+</html>
