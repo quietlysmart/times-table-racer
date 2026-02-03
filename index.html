@@ -69,17 +69,9 @@
       background-position: center;
     }
 
-    .game-title {
-      font-size: clamp(2rem, 8vw, 3.5rem);
-      font-weight: 700;
-      color: var(--primary-dark);
-      text-align: center;
-      line-height: 1.1;
-    }
-
-    .title-icon {
-      font-size: clamp(3rem, 10vw, 5rem);
-      display: block;
+    .game-logo {
+      max-width: min(90%, 400px);
+      height: auto;
       margin-bottom: 10px;
     }
 
@@ -100,15 +92,24 @@
     }
 
     .char-btn {
-      width: 70px;
-      height: 70px;
-      font-size: 2.5rem;
+      width: 80px;
+      height: 80px;
+      padding: 8px;
       background: var(--surface);
       border: 3px solid transparent;
       border-radius: var(--radius);
       cursor: pointer;
       box-shadow: var(--shadow);
       transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .char-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
     .char-btn:hover { transform: scale(1.05); }
@@ -368,11 +369,18 @@
 
     .runner {
       position: absolute;
-      font-size: 2.8rem;
+      width: 60px;
+      height: 60px;
       transform: translateY(-50%);
       transition: left 0.3s ease-out;
       z-index: 2;
       filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.3));
+    }
+
+    .runner img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
     .runner.jump {
@@ -391,9 +399,17 @@
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 2rem;
+      width: 40px;
+      height: 40px;
       z-index: 1;
     }
+
+    .flag img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
     .flag-start { left: 10px; }
     .flag-finish { right: 10px; }
 
@@ -524,7 +540,16 @@
       text-align: center;
     }
 
-    .trophy { font-size: 4rem; }
+    .trophy {
+      width: 120px;
+      height: 120px;
+    }
+
+    .trophy img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
     .results-title {
       font-size: 2rem;
       color: var(--primary-dark);
@@ -608,17 +633,14 @@
       <button class="corner-btn settings-btn" onclick="openSettings()">⚙️</button>
       <button class="corner-btn help-btn" onclick="openHelp()">❓</button>
 
-      <div>
-        <span class="title-icon">🏁</span>
-        <h1 class="game-title">Times Table<br>Racer</h1>
-      </div>
+      <img src="assets/images/ui/logo.png" alt="Times Table Racer" class="game-logo">
 
       <div class="character-section">
         <p>Choose your runner:</p>
         <div class="characters">
-          <button class="char-btn selected" data-char="🐰" onclick="selectChar(this)">🐰</button>
-          <button class="char-btn" data-char="🐱" onclick="selectChar(this)">🐱</button>
-          <button class="char-btn" data-char="🐶" onclick="selectChar(this)">🐶</button>
+          <button class="char-btn selected" data-char="rabbit" onclick="selectChar(this)"><img src="assets/images/characters/rabbit.png" alt="Rabbit"></button>
+          <button class="char-btn" data-char="cat" onclick="selectChar(this)"><img src="assets/images/characters/cat.png" alt="Cat"></button>
+          <button class="char-btn" data-char="dog" onclick="selectChar(this)"><img src="assets/images/characters/dog.png" alt="Dog"></button>
         </div>
       </div>
 
@@ -733,10 +755,10 @@
         <div class="race-track">
           <div class="track-lane"></div>
           <div class="track-line"></div>
-          <span class="flag flag-start">🚩</span>
-          <span class="flag flag-finish">🏁</span>
-          <div class="runner player-runner" id="player-runner">🐰</div>
-          <div class="runner opponent-runner" id="opponent-runner">🐢</div>
+          <span class="flag flag-start"><img src="assets/images/ui/flag-start.png" alt="Start"></span>
+          <span class="flag flag-finish"><img src="assets/images/ui/flag-finish.png" alt="Finish"></span>
+          <div class="runner player-runner" id="player-runner"><img src="assets/images/characters/rabbit.png" alt="Player"></div>
+          <div class="runner opponent-runner" id="opponent-runner"><img src="assets/images/characters/turtle.png" alt="Opponent"></div>
         </div>
         <div class="track-labels">
           <span>START</span>
@@ -748,7 +770,7 @@
     <!-- RESULTS SCREEN -->
     <div id="results-screen" class="screen">
       <div class="results-header">
-        <div class="trophy" id="trophy">🏆</div>
+        <div class="trophy" id="trophy"><img src="assets/images/ui/trophy.png" alt="Trophy"></div>
         <h2 class="results-title" id="results-title">Great Race!</h2>
       </div>
 
@@ -795,7 +817,7 @@
       difficulty: 'standard',
       opponent: true,
       sound: true,
-      character: '🐰'
+      character: 'rabbit'
     };
 
     let game = {
@@ -931,7 +953,7 @@
       };
 
       // Update player character
-      document.getElementById('player-runner').textContent = settings.character;
+      document.getElementById('player-runner').innerHTML = `<img src="assets/images/characters/${settings.character}.png" alt="Player">`;
       document.getElementById('player-runner').style.left = '5%';
       document.getElementById('opponent-runner').style.left = '5%';
       document.getElementById('opponent-runner').style.display = settings.opponent ? 'block' : 'none';
@@ -1102,7 +1124,9 @@
         playWinSound();
       }
 
-      document.getElementById('trophy').textContent = won ? '🏆' : '🎖️';
+      document.getElementById('trophy').innerHTML = won
+        ? '<img src="assets/images/ui/trophy.png" alt="Trophy">'
+        : '<img src="assets/images/ui/medal.png" alt="Medal">';
       document.getElementById('results-title').textContent = won ?
         (game.score >= game.questions.length * 0.8 ? 'Amazing!' : 'You Won!') : 'Good Try!';
       document.getElementById('final-score').textContent = `${game.score}/${game.questions.length}`;
