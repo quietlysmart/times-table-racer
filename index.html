@@ -907,15 +907,41 @@
 
     function generateDistractors(base, mult, answer) {
       const set = new Set();
-      // Off by one multiple
+
+      // Strategy 1: Off by one multiple
       if (answer - base > 0) set.add(answer - base);
       set.add(answer + base);
-      // Adjacent multiples
+
+      // Strategy 2: Adjacent multiples
       if (base * (mult - 1) > 0) set.add(base * (mult - 1));
       set.add(base * (mult + 1));
+
+      // Strategy 3: Off by small amounts
+      if (answer - 1 > 0) set.add(answer - 1);
+      set.add(answer + 1);
+      if (answer - 2 > 0) set.add(answer - 2);
+      set.add(answer + 2);
+
+      // Strategy 4: Common mistakes (double or half)
+      set.add(answer * 2);
+      if (answer > 2 && answer % 2 === 0) set.add(answer / 2);
+
+      // Strategy 5: Random nearby numbers
+      set.add(answer + 5);
+      if (answer - 5 > 0) set.add(answer - 5);
+
       // Remove correct answer if somehow added
       set.delete(answer);
-      // Return 3 distractors
+
+      // Ensure we have at least 3 distractors - add fallbacks if needed
+      let fallback = 1;
+      while (set.size < 3) {
+        const candidate = answer + fallback * 3;
+        if (candidate !== answer) set.add(candidate);
+        fallback++;
+      }
+
+      // Return exactly 3 distractors
       return Array.from(set).slice(0, 3);
     }
 
@@ -985,6 +1011,12 @@
       const q = game.questions[game.currentIndex];
       document.getElementById('question-text').textContent = q.text;
       document.getElementById('q-left').textContent = game.questions.length - game.currentIndex;
+
+      // Ensure we have exactly 4 options
+      while (q.options.length < 4) {
+        const filler = q.answer + q.options.length + 3;
+        if (!q.options.includes(filler)) q.options.push(filler);
+      }
 
       const btns = document.querySelectorAll('.answer-btn');
       btns.forEach((btn, i) => {
